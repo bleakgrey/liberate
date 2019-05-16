@@ -9,9 +9,9 @@ You'll need the following dependencies:
 
 Run these commands to build liberate:
 
-  meson build --prefix=/usr
-  cd build
-  ninja
+    meson build --prefix=/usr
+    cd build
+    ninja
 
 This command creates a `build` directory. For all following commands, change to
 the build directory before running them.
