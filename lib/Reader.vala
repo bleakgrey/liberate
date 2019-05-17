@@ -13,15 +13,6 @@ public class Liberate.Reader: Grid {
 	public string url {get; set;}
 	public bool is_debug {get; set; default = false;}
 
- 	protected const string[] reader_deps = {
- 		"theme-light.css",
- 		"theme-solarized.css",
- 		"theme-moonlight.css",
- 		"Readability-readerable.js",
- 		"Readability.js",
- 		"patcher.js"
- 	};
-
 	construct {
 		halign = Align.FILL;
 		valign = Align.FILL;
@@ -64,7 +55,7 @@ public class Liberate.Reader: Grid {
 		settings.enable_webgl = false;
 
 		content = new UserContentManager ();
-		content.register_script_message_handler ("bridge");
+		content.register_script_message_handler (HANDLER);
 
 		view = new WebView.with_user_content_manager (content);
 		view.expand = true;
@@ -74,7 +65,7 @@ public class Liberate.Reader: Grid {
 
 		view.notify["estimated-load-progress"].connect (on_progress);
 		notify["theme"].connect (() => {
-			apply_theme (theme);
+			apply_theme (view, theme);
 		});
 		
 		content.script_message_received.connect (result => {
@@ -91,38 +82,10 @@ public class Liberate.Reader: Grid {
 		view.load_changed.connect (on_patch_request);
 	}
 
-	protected void inject (string[] resources) {
-		foreach (string name in resources) {
-			var res = GLib.resources_lookup_data (RESOURCES_PATH + name, ResourceLookupFlags.NONE);
-			var source = (string)res.get_data ();
-			if (".css" in name) {
-				var stylesheet = new UserStyleSheet (source,
-					UserContentInjectedFrames.TOP_FRAME,
-					UserStyleLevel.USER, null, null);
-
-				content.add_style_sheet (stylesheet);
-			}
-			else
-			{
-				// var script = new UserScript (source,
-				// 	UserContentInjectedFrames.TOP_FRAME,
-				// 	UserScriptInjectionTime.START, null, null);
-				view.run_javascript (source, null);
-			}
-		}
-	}
-
-	protected inline string to_vala_string (global::JS.String js) {
-		size_t len = js.get_maximum_utf8_cstring_size ();
-		uint8[] str = new uint8[len];
-		js.get_utf8_cstring (str);
-		return (string) str;
-	}
-
 	protected bool on_message (string text) {
 		debug ("Bridge message: %s", text);
 		
-		if (text == "done") {
+		if (text == MSG_PATCHED) {
 			progress (1, false);
 			view.load_changed.disconnect (on_patch_request);
 		}
@@ -133,21 +96,13 @@ public class Liberate.Reader: Grid {
 		progress (view.estimated_load_progress, view.is_loading);
 	}
 
-	protected void apply_theme (string name) {
-		//var js = settings.get_enable_javascript ();
-		//settings.set_enable_javascript (true);
-		view.run_javascript ("var reader_theme=\""+name+"\"; theme(\""+name+"\");", null);
-		//settings.set_enable_javascript (js);
-	}
-
 	protected void on_patch_request (LoadEvent ev) {
 		if (ev != LoadEvent.FINISHED)
 			return;
 
 		debug ("Page load complete");
 		settings.set_enable_javascript (true);
-		inject (reader_deps);
-		apply_theme (theme);
+		Liberate.read (view);
 		view.visible = true;
 	}
 

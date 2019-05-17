@@ -1,5 +1,5 @@
 lib_sources = files(
-    'Library.vala',
+    'Liberate.vala',
     'Reader.vala',
 )
 
