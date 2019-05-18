@@ -85,7 +85,7 @@ public class Demo : Gtk.Application {
 		settings.set_enable_developer_extras (true);
 		view.settings = settings;
 		view.bind_property ("estimated-load-progress", entry, "progress-fraction", BindingFlags.SYNC_CREATE);
-		Liberate.on_readable.begin (view, () => {
+		Liberate.on_readable (view, () => {
 			read_button.get_style_context ().add_class (Gtk.STYLE_CLASS_SUGGESTED_ACTION);
 			read_menu_button.get_style_context ().add_class (Gtk.STYLE_CLASS_SUGGESTED_ACTION);
 		});

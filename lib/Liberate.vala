@@ -1,15 +1,15 @@
 using WebKit;
 
 namespace Liberate {
-	
+
 	protected const string RESOURCES_PATH = "/com/github/bleakgrey/liberate/";
 	protected const string DEP_READABLE = "Readability-readerable.js";
 	protected const string DEP_IS_READABLE = "is_readable.js";
-	
+
 	public const string HANDLER = "liberate";
 	public const string MSG_PATCHED = "liberate:done";
 	public const string MSG_READABLE = "liberate:readable";
-	
+
  	protected const string[] READER_MODE_DEPS = {
  		DEP_READABLE,
  		"Readability.js",
@@ -18,11 +18,11 @@ namespace Liberate {
  		"theme-solarized.css",
  		"theme-moonlight.css"
  	};
-	
+
 	public static string[] get_themes () {
 		return {"light", "solarized", "moonlight"};
 	}
-	
+
 	static string read_resource (string name) {
 		var res = GLib.resources_lookup_data (RESOURCES_PATH + name, ResourceLookupFlags.NONE);
 		return (string)res.get_data ();
@@ -48,9 +48,9 @@ namespace Liberate {
 			return "";
 		}
 	}
-	
+
 	public delegate void IsReadableCallback ();
-	public static async void on_readable (WebView view, IsReadableCallback cb) {
+	public static void on_readable (WebView view, IsReadableCallback cb) {
 		var content = view.user_content_manager;
 		content.register_script_message_handler (HANDLER);
 		content.script_message_received.connect (result => {
@@ -61,9 +61,9 @@ namespace Liberate {
 		view.load_changed.connect ((ev) => {
 			if (ev != LoadEvent.FINISHED)
 				return;
-			
+
 			var source = read_resource (DEP_READABLE) + read_resource (DEP_IS_READABLE);
-			view.run_javascript (source, null);
+			view.run_javascript.begin (source, null);
 		});
 	}
 
@@ -79,29 +79,29 @@ namespace Liberate {
 				content.add_style_sheet (stylesheet);
 			}
 			else {
-				view.run_javascript (source, null);
+				view.run_javascript.begin (source, null);
 			}
 		}
 	}
-	
+
 	public static void apply_theme (WebView view, string name) {
-		view.run_javascript ("var reader_theme=\""+name+"\"; theme(\""+name+"\");", null);
+		view.run_javascript.begin ("var reader_theme=\""+name+"\"; theme(\""+name+"\");", null);
 	}
-	
+
 	public static void read (WebView view, string theme = "light") {
 		if (view.is_loading)
 			view.stop_loading ();
-		
+
 		ulong id = 0;
 		id = view.load_changed.connect ((ev) => {
 			if (ev != LoadEvent.STARTED)
 				return;
-			
+
 			debug ("Unloading injected content");
 			view.user_content_manager.remove_all_style_sheets ();
 			view.disconnect (id);
 		});
-		
+
 		inject (view, READER_MODE_DEPS);
 		apply_theme (view, theme);
 	}
