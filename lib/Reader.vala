@@ -9,40 +9,16 @@ public class Liberate.Reader: Grid {
 	protected WebKit.UserContentManager content;
 	
 	public signal void progress (double fraction, bool ready);
-	public string theme {get; set; default = "light";}
+	public string theme {get; set;}
 	public string url {get; set;}
-	public bool is_debug {get; set; default = false;}
 
 	construct {
 		halign = Align.FILL;
 		valign = Align.FILL;
 		
-		notify["url"].connect (() => {
-			create_view ();
-			debug ("Navigating to %s", url);
-			view.load_uri (url);
-		});
-	}
-
-	public Reader () {}
-	
-	public Reader.with_url (string url) {
-		this.url = url;
-	}
-
-	protected void create_view () {
-		if (view != null) {
-			debug ("Destroying old view");
-			view.destroy ();
-			settings = null;
-			content = null;
-		}
-		
 		settings = new WebKit.Settings ();
 		settings.enable_smooth_scrolling = true;
 		settings.enable_javascript = false;
-		settings.enable_developer_extras = is_debug;
-
 		settings.javascript_can_access_clipboard = false;
 		settings.javascript_can_open_windows_automatically = false;
 		settings.enable_java = false;
@@ -69,17 +45,27 @@ public class Liberate.Reader: Grid {
 		});
 		
 		content.script_message_received.connect (result => {
-			unowned JS.GlobalContext ctx = result.get_global_context ();
-			unowned JS.Value js_str_value = result.get_value ();
-			JS.Value? err = null;
-			JS.String js_str = js_str_value.to_string_copy (ctx, out err);
-			
-			if (err == null)
-				on_message (to_vala_string (js_str));
+			var msg = decode_message (result);
+			if (msg != "")
+				on_message (msg);
 			else
 				warning ("Caught JS error on receiving bridge message");
 		});
 		view.load_changed.connect (on_patch_request);
+		
+		notify["url"].connect (() => {
+			debug ("Navigating to %s", url);
+			view.load_uri (url);
+		});
+	}
+
+	public Reader (string theme = "light") {
+		this.theme = theme;
+	}
+	
+	public Reader.with_url (string url, string theme = "light") {
+		this.theme = theme;
+		this.url = url;
 	}
 
 	protected bool on_message (string text) {
@@ -102,7 +88,7 @@ public class Liberate.Reader: Grid {
 
 		debug ("Page load complete");
 		settings.set_enable_javascript (true);
-		Liberate.read (view);
+		Liberate.read (view, theme);
 		view.visible = true;
 	}
 

@@ -19,6 +19,10 @@ namespace Liberate {
  		"theme-moonlight.css"
  	};
 	
+	public static string[] get_themes () {
+		return {"light", "solarized", "moonlight"};
+	}
+	
 	static string read_resource (string name) {
 		var res = GLib.resources_lookup_data (RESOURCES_PATH + name, ResourceLookupFlags.NONE);
 		return (string)res.get_data ();
@@ -80,7 +84,7 @@ namespace Liberate {
 		}
 	}
 	
-	static void apply_theme (WebView view, string name) {
+	public static void apply_theme (WebView view, string name) {
 		view.run_javascript ("var reader_theme=\""+name+"\"; theme(\""+name+"\");", null);
 	}
 	
@@ -93,6 +97,7 @@ namespace Liberate {
 			if (ev != LoadEvent.STARTED)
 				return;
 			
+			debug ("Unloading injected content");
 			view.user_content_manager.remove_all_style_sheets ();
 			view.disconnect (id);
 		});
