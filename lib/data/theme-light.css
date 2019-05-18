@@ -8,8 +8,12 @@ body {
 	font-size: calc(1em + 0.5vw);
 }
 
+.page {
+	line-height: calc(1.5em + 1vw);
+}
+
 header h1 {
-	text-transform:capitalize;
+	text-transform: capitalize;
 }
 header h4 {
 	font-weight: normal;
@@ -19,8 +23,8 @@ header div {
 	text-align: center;
 	height: 0.25em;
 	max-height: 0px;
-	margin-top: 2em;
-	margin-bottom: 2em;
+	margin-top: 4em;
+	margin-bottom: 4em;
 }
 header div:after {
 	content: "§";
