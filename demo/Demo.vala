@@ -85,9 +85,17 @@ public class Demo : Gtk.Application {
 		settings.set_enable_developer_extras (true);
 		view.settings = settings;
 		view.bind_property ("estimated-load-progress", entry, "progress-fraction", BindingFlags.SYNC_CREATE);
-		Liberate.on_readable (view, () => {
-			read_button.get_style_context ().add_class (Gtk.STYLE_CLASS_SUGGESTED_ACTION);
-			read_menu_button.get_style_context ().add_class (Gtk.STYLE_CLASS_SUGGESTED_ACTION);
+		view.load_changed.connect (ev => {
+			if (ev != LoadEvent.STARTED)
+				return;
+			
+			read_button.get_style_context ().remove_class (Gtk.STYLE_CLASS_SUGGESTED_ACTION);
+			read_menu_button.get_style_context ().remove_class (Gtk.STYLE_CLASS_SUGGESTED_ACTION);
+			read_button.sensitive = true;
+			Liberate.on_readable (view, () => {
+				read_button.get_style_context ().add_class (Gtk.STYLE_CLASS_SUGGESTED_ACTION);
+				read_menu_button.get_style_context ().add_class (Gtk.STYLE_CLASS_SUGGESTED_ACTION);
+			});
 		});
 
 		stack = new Stack ();
@@ -126,9 +134,6 @@ public class Demo : Gtk.Application {
 
 	protected void go () {
 		view.load_uri (entry.text);
-		read_button.get_style_context ().remove_class (Gtk.STYLE_CLASS_SUGGESTED_ACTION);
-		read_menu_button.get_style_context ().remove_class (Gtk.STYLE_CLASS_SUGGESTED_ACTION);
-		read_button.sensitive = true;
 	}
 
 	protected void update_header () {

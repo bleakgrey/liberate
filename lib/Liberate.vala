@@ -58,12 +58,14 @@ namespace Liberate {
 				cb ();
 		});
 
-		view.load_changed.connect ((ev) => {
+		ulong id = 0;
+		id = view.load_changed.connect ((ev) => {
 			if (ev != LoadEvent.FINISHED)
 				return;
 
 			var source = read_resource (DEP_READABLE) + read_resource (DEP_IS_READABLE);
 			view.run_javascript.begin (source, null);
+			view.disconnect (id);
 		});
 	}
 
